@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBI - Archiv</title>
+  <style>
+    :root {
+      --cbi-blue: #0b1a30;
+      --cbi-gold: #d4af37;
+      --bg-dark: #050a12;
+      --card-bg: #091322;
+      --text-color: #e0e6ed;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background: linear-gradient(180deg, #0f2442 0%, var(--cbi-blue) 100%);
+      border-bottom: 3px solid var(--cbi-gold);
+      padding: 15px 0;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .title-box h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 850px;
+      margin: 20px auto;
+    }
+
+    .nav-bar {
+      margin-bottom: 15px;
+    }
+
+    .btn-link {
+      background: #1e365d;
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      border: 1px solid var(--cbi-gold);
+    }
+
+    .search-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      color: var(--cbi-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: #04080e;
+      border: 1px solid #1e365d;
+      border-radius: 4px;
+      color: #fff;
+      padding: 12px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      background: linear-gradient(180deg, #d4af37 0%, #aa820a 100%);
+      color: #000;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .result-box {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--cbi-gold);
+      border-radius: 8px;
+      padding: 20px;
+      white-space: pre-wrap;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .not-found {
+      display: none;
+      background: #3a0d0d;
+      border: 1px solid #ff4d4d;
+      color: #ffcccc;
+      padding: 15px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="title-box">
+    <h1>California Bureau of Investigation</h1>
+    <h2 style="color:var(--cbi-gold); font-size:12px; margin-top:2px;">CBI Archiv System</h2>
+  </div>
+</header>
+
+<div class="container">
+  <div class="nav-bar">
+    <a href="index.html" class="btn-link">← Zurück zur Hauptdatenbank</a>
+  </div>
+
+  <div class="search-card">
+    <label for="archiveSearch">Aktenzeichen oder Name suchen</label>
+    <input type="text" id="archiveSearch" placeholder="z.B. #CBI-123456 oder Name...">
+    <button onclick="searchArchive()">Archiv Durchsuchen</button>
+  </div>
+
+  <div id="notFound" class="not-found">Keine Akte unter diesen Suchbegriffen im Speicher gefunden.</div>
+  <div id="resultBox" class="result-box"></div>
+</div>
+
+<script>
+function searchArchive() {
+  const query = document.getElementById('archiveSearch').value.trim().toLowerCase();
+  const resultBox = document.getElementById('resultBox');
+  const notFound = document.getElementById('notFound');
+
+  resultBox.style.display = "none";
+  notFound.style.display = "none";
+
+  if (!query) {
+    alert("Bitte Aktenzeichen oder Name eingeben!");
+    return;
+  }
+
+  let foundData = null;
+
+  // Alle im LocalStorage gespeicherten CBI-Einträge durchsuchen
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith("CBI_FILE_")) {
+      const rawData = localStorage.getItem(key);
+      try {
+        const item = JSON.parse(rawData);
+        const fileKeyLower = key.toLowerCase();
+        const titleLower = item.title ? item.title.toLowerCase() : "";
+        const contentLower = item.content ? item.content.toLowerCase() : "";
+
+        if (fileKeyLower.includes(query) || titleLower.includes(query) || contentLower.includes(query)) {
+          foundData = item;
+          break;
+        }
+      } catch (e) {
+        console.error("Fehler beim Lesen der Akte", e);
+      }
+    }
+  }
+
+  if (foundData) {
+    resultBox.innerText = `=== AKTENFUND ===\nTITEL: ${foundData.title}\n\n${foundData.content}`;
+    resultBox.style.display = "block";
+  } else {
+    notFound.style.display = "block";
+  }
+}
+</script>
+
+</body>
+</html>

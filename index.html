@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBI - California Bureau of Investigation</title>
+  <style>
+    :root {
+      --cbi-blue: #0b1a30;
+      --cbi-gold: #d4af37;
+      --bg-dark: #050a12;
+      --card-bg: #091322;
+      --text-color: #e0e6ed;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background: linear-gradient(180deg, #0f2442 0%, var(--cbi-blue) 100%);
+      border-bottom: 3px solid var(--cbi-gold);
+      padding: 15px 0;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-content {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .cbi-logo {
+      width: 60px;
+      height: 60px;
+    }
+
+    .title-box h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .title-box h2 {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: var(--cbi-gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 850px;
+      margin: 20px auto;
+    }
+
+    .nav-bar {
+      margin-bottom: 15px;
+      text-align: right;
+    }
+
+    .btn-link {
+      background: #1e365d;
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      border: 1px solid var(--cbi-gold);
+    }
+
+    .search-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      color: var(--cbi-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: #04080e;
+      border: 1px solid #1e365d;
+      border-radius: 4px;
+      color: #fff;
+      padding: 12px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      background: linear-gradient(180deg, #d4af37 0%, #aa820a 100%);
+      color: #000;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: linear-gradient(180deg, #f3e5ab 0%, #d4af37 100%);
+    }
+
+    .terminal-loader {
+      display: none;
+      background: #020509;
+      border: 1px solid #1e365d;
+      border-radius: 6px;
+      padding: 15px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      color: #00ffcc;
+      height: 120px;
+      overflow-y: hidden;
+      margin-bottom: 20px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    }
+
+    .terminal-line {
+      margin: 2px 0;
+      opacity: 0.9;
+    }
+
+    .profile-card {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--cbi-gold);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    }
+
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      color: var(--cbi-gold);
+      font-weight: bold;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .category-box {
+      background: #04080e;
+      border: 1px solid #1e365d;
+      border-radius: 4px;
+      padding: 12px;
+    }
+
+    .category-box h3 {
+      margin: 0 0 8px 0;
+      font-size: 11px;
+      color: var(--cbi-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px dashed #1e365d;
+      padding-bottom: 4px;
+    }
+
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .data-label {
+      color: #8a9ba8;
+    }
+
+    .data-value {
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .notes-box {
+      background: #04080e;
+      border: 1px solid #1e365d;
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 15px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .error-box {
+      display: none;
+      background: #3a0d0d;
+      border: 1px solid #ff4d4d;
+      color: #ffcccc;
+      padding: 15px;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-content">
+    <svg class="cbi-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="46" fill="#0b1a30" stroke="#d4af37" stroke-width="3"/>
+      <path d="M50 15 L58 32 L77 32 L62 44 L67 62 L50 51 L33 62 L38 44 L23 32 L42 32 Z" fill="#d4af37" />
+    </svg>
+    <div class="title-box">
+      <h1>California Bureau of Investigation</h1>
+      <h2>CBI Central Database System</h2>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="nav-bar">
+    <a href="archiv.html" class="btn-link">Zum CBI Archiv →</a>
+  </div>
+
+  <div class="search-card">
+    <label for="nameInput">Subjekt Name / Aktenabfrage</label>
+    <input type="text" id="nameInput" placeholder="Name eingeben...">
+    <button id="searchBtn" onclick="searchCBI()">Datenbank Abfragen</button>
+  </div>
+
+  <div id="terminalLoader" class="terminal-loader"></div>
+  <div id="errorBox" class="error-box"></div>
+
+  <div id="profileCard" class="profile-card">
+    <div class="meta-bar">
+      <span id="fileId">AKTENZEICHEN: #-</span>
+      <span id="fileStatus">STATUS: -</span>
+    </div>
+
+    <div class="grid-container">
+      <div class="category-box">
+        <h3>Personendaten</h3>
+        <div class="data-row"><span class="data-label">Name:</span> <span class="data-value" id="valName">-</span></div>
+        <div class="data-row"><span class="data-label">Geburtsdatum:</span> <span class="data-value" id="valDob">-</span></div>
+        <div class="data-row"><span class="data-label">Staatsangehörigkeit:</span> <span class="data-value" id="valNat">-</span></div>
+      </div>
+
+      <div class="category-box">
+        <h3>Wohnort & Umfeld</h3>
+        <div class="data-row"><span class="data-label">Wohnort:</span> <span class="data-value" id="valLoc">-</span></div>
+        <div class="data-row"><span class="data-label">Familienstand:</span> <span class="data-value" id="valFam">-</span></div>
+      </div>
+
+      <div class="category-box">
+        <h3>Beruf & Status</h3>
+        <div class="data-row"><span class="data-label">Beruf:</span> <span class="data-value" id="valJob">-</span></div>
+        <div class="data-row"><span class="data-label">Sicherheitsstufe:</span> <span class="data-value" id="valSec">-</span></div>
+      </div>
+    </div>
+
+    <div class="category-box">
+      <h3>CBI-Hintergrundakte & Ermittlungen</h3>
+      <div class="notes-box" id="valNotes">-</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_KEY = "DEIN_GEMINI_API_KEY_HIER";
+let loaderInterval = null;
+
+// Erzeugt aus dem Namen immer die gleiche Zahl
+function generateDeterministicKey(name) {
+  const cleanName = name.toLowerCase().trim();
+  if (cleanName.includes('red john')) {
+    return '#CBI-REDJOHN';
+  }
+  let hash = 0;
+  for (let i = 0; i < cleanName.length; i++) {
+    hash = (hash << 5) - hash + cleanName.charCodeAt(i);
+    hash |= 0;
+  }
+  const positiveHash = Math.abs(hash);
+  const number = (positiveHash % 900000) + 100000;
+  return `#CBI-${number}`;
+}
+
+function startTerminalAnimation(targetName) {
+  const terminal = document.getElementById('terminalLoader');
+  terminal.style.display = "block";
+  terminal.innerHTML = "";
+
+  const logs = [
+    `> CONNECTING TO CBI_SACRAMENTO_MAIN...`,
+    `> AUTHENTICATING USER_ID #410292... APPROVED.`,
+    `> QUERYING DATABASE FOR: "${targetName.toUpperCase()}"...`,
+    `> SCANNING DOJ RECORDS [0x88F2A...0x99B3E]`,
+    `> CROSS-REFERENCING SACRAMENTO PD FILES...`,
+    `> MATCH FOUND. DECRYPTING AKTE...`,
+    `> PARSING JSON STRUCTURE...`
+  ];
+
+  let step = 0;
+  loaderInterval = setInterval(() => {
+    if (step < logs.length) {
+      const line = document.createElement('div');
+      line.className = 'terminal-line';
+      line.innerText = logs[step];
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
+      step++;
+    }
+  }, 200);
+}
+
+function stopTerminalAnimation() {
+  if (loaderInterval) clearInterval(loaderInterval);
+  document.getElementById('terminalLoader').style.display = "none";
+}
+
+async function searchCBI() {
+  const nameInput = document.getElementById('nameInput');
+  const name = nameInput.value.trim();
+  const profileCard = document.getElementById('profileCard');
+  const errorBox = document.getElementById('errorBox');
+
+  if (!name) {
+    alert("Bitte einen Namen eingeben!");
+    return;
+  }
+
+  profileCard.style.display = "none";
+  errorBox.style.display = "none";
+  startTerminalAnimation(name);
+
+  // Exakt gleiches Aktenzeichen pro Name
+  const generatedKey = generateDeterministicKey(name);
+
+  const promptText = `Du bist die CBI-Datenbank. Generiere Daten für: "${name}".
+Verwende exakt folgendes Aktenzeichen: "${generatedKey}".
+Antworte AUSSCHLIESSLICH als gültiges JSON in folgendem Format:
+{
+  "aktenzeichen": "${generatedKey}",
+  "status": "VERDÄCHTIGER",
+  "name": "${name}",
+  "geburtsdatum": "14.08.1982",
+  "staatsangehoerigkeit": "USA",
+  "wohnort": "Sacramento, Kalifornien",
+  "familienstand": "Ledig",
+  "beruf": "Unbekannt",
+  "sicherheitsstufe": "Stufe 2",
+  "ermittlungsakte": "Eine potentielle Verbindung zum Fall wird derzeit geprüft."
+}`;
+
+  let result = null;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      let rawText = data.candidates[0].content.parts[0].text;
+      rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+      result = JSON.parse(rawText);
+    }
+  } catch (e) {
+    console.warn("API Error / Fallback genutzt:", e);
+  }
+
+  stopTerminalAnimation();
+
+  if (!result) {
+    result = {
+      aktenzeichen: generatedKey,
+      status: "VERDÄCHTIGER",
+      name: name,
+      geburtsdatum: "14.08.1982",
+      staatsangehoerigkeit: "USA",
+      wohnort: "Sacramento, Kalifornien",
+      familienstand: "Ledig",
+      beruf: "Antiquitätenhändler",
+      sicherheitsstufe: "Stufe 2",
+      ermittlungsakte: "Eine potentielle Verbindung zum Fall 'Red John' wird derzeit geprüft. Bei der Erstbefragung zeigte das Subjekt auffallend nervöse Reaktionen."
+    };
+  }
+
+  result.aktenzeichen = generatedKey;
+
+  document.getElementById('fileId').innerText = `AKTENZEICHEN: ${result.aktenzeichen}`;
+  document.getElementById('fileStatus').innerText = `STATUS: ${result.status}`;
+  document.getElementById('valName').innerText = result.name;
+  document.getElementById('valDob').innerText = result.geburtsdatum;
+  document.getElementById('valNat').innerText = result.staatsangehoerigkeit;
+  document.getElementById('valLoc').innerText = result.wohnort;
+  document.getElementById('valFam').innerText = result.familienstand;
+  document.getElementById('valJob').innerText = result.beruf;
+  document.getElementById('valSec').innerText = result.sicherheitsstufe;
+  document.getElementById('valNotes').innerText = result.ermittlungsakte;
+
+  const archivePayload = {
+    title: `${result.name} (${result.status})`,
+    content: `=== CLASSIFIED // LEVEL ${result.sicherheitsstufe} ===\n\nPERSONENDATEN:\n- Name: ${result.name}\n- Geburtsdatum: ${result.geburtsdatum}\n- Staatsangehörigkeit: ${result.staatsangehoerigkeit}\n- Wohnort: ${result.wohnort}\n- Familienstand: ${result.familienstand}\n- Beruf: ${result.beruf}\n\nERMITTLUNGSAKTE:\n${result.ermittlungsakte}`
+  };
+
+  localStorage.setItem("CBI_FILE_" + result.aktenzeichen.trim(), JSON.stringify(archivePayload));
+  profileCard.style.display = "block";
+}
+</script>
+
+</body>
+</html>
