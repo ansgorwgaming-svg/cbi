@@ -260,7 +260,7 @@
 
 <div class="container">
   <div class="nav-bar">
-    <button onclick="changeApiKey()" class="btn-link btn-key">⚙ API-Key ändern</button>
+    <button onclick="changeApiSettings()" class="btn-link btn-key">⚙ AI-Provider & Key</button>
     <a href="archiv.html" class="btn-link">Zum CBI Archiv →</a>
   </div>
 
@@ -310,23 +310,43 @@
 <script>
 let loaderInterval = null;
 
-function getApiKey() {
-  let key = localStorage.getItem("CBI_GEMINI_API_KEY");
+// Standard-Provider ist Gemini, falls nicht anders gewählt
+function getProvider() {
+  return localStorage.getItem("CBI_AI_PROVIDER") || "gemini";
+}
+
+function getApiKey(provider) {
+  const storageKey = provider === "openai" ? "CBI_OPENAI_API_KEY" : "CBI_GEMINI_API_KEY";
+  let key = localStorage.getItem(storageKey);
   if (!key) {
-    key = prompt("Bitte gib deinen Gemini API-Key ein:");
+    const providerName = provider === "openai" ? "ChatGPT (OpenAI)" : "Google Gemini";
+    key = prompt(`Bitte gib deinen API-Key für ${providerName} ein:`);
     if (key) {
-      localStorage.setItem("CBI_GEMINI_API_KEY", key.trim());
+      localStorage.setItem(storageKey, key.trim());
     }
   }
   return key;
 }
 
-function changeApiKey() {
-  const currentKey = localStorage.getItem("CBI_GEMINI_API_KEY") || "";
-  const newKey = prompt("Neuen Gemini API-Key eingeben:", currentKey);
+function changeApiSettings() {
+  const currentProvider = getProvider();
+  const choice = prompt("Wähle deine KI-Quelle:\n1 = Google Gemini\n2 = ChatGPT (OpenAI)", currentProvider === "openai" ? "2" : "1");
+  
+  let newProvider = "gemini";
+  if (choice === "2" || choice?.toLowerCase().includes("chatgpt") || choice?.toLowerCase().includes("openai")) {
+    newProvider = "openai";
+  }
+
+  localStorage.setItem("CBI_AI_PROVIDER", newProvider);
+
+  const storageKey = newProvider === "openai" ? "CBI_OPENAI_API_KEY" : "CBI_GEMINI_API_KEY";
+  const currentKey = localStorage.getItem(storageKey) || "";
+  const providerName = newProvider === "openai" ? "ChatGPT (OpenAI)" : "Google Gemini";
+  
+  const newKey = prompt(`Neuen API-Key für ${providerName} eingeben:`, currentKey);
   if (newKey !== null && newKey.trim() !== "") {
-    localStorage.setItem("CBI_GEMINI_API_KEY", newKey.trim());
-    alert("API-Key erfolgreich gespeichert!");
+    localStorage.setItem(storageKey, newKey.trim());
+    alert(`Einstellungen für ${providerName} gespeichert!`);
   }
 }
 
@@ -378,10 +398,50 @@ function stopTerminalAnimation() {
   document.getElementById('terminalLoader').style.display = "none";
 }
 
+async function fetchFromGemini(apiKey, promptText) {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+  });
+
+  if (!response.ok) throw new Error(`Gemini HTTP-Fehler: ${response.status}`);
+  
+  const data = await response.json();
+  let rawText = data.candidates[0].content.parts[0].text;
+  return JSON.parse(rawText.replace(/```json/g, "").replace(/```/g, "").trim());
+}
+
+async function fetchFromOpenAI(apiKey, promptText) {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "Du gibst ausschließlich valides JSON zurück." },
+        { role: "user", content: promptText }
+      ],
+      response_format: { type: "json_object" }
+    })
+  });
+
+  if (!response.ok) throw new Error(`OpenAI HTTP-Fehler: ${response.status}`);
+
+  const data = await response.json();
+  let rawText = data.choices[0].message.content;
+  return JSON.parse(rawText.replace(/```json/g, "").replace(/```/g, "").trim());
+}
+
 async function searchCBI() {
-  const apiKey = getApiKey();
+  const provider = getProvider();
+  const apiKey = getApiKey(provider);
+
   if (!apiKey) {
-    alert("Ohne API-Key kann keine KI-Abfrage durchgeführt werden!");
+    alert("Ohne API-Key kann keine Abfrage durchgeführt werden!");
     return;
   }
 
@@ -420,19 +480,10 @@ Antworte AUSSCHLIESSLICH als gültiges JSON ohne Markdown-Formatierung:
   let result = null;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      let rawText = data.candidates[0].content.parts[0].text;
-      rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-      result = JSON.parse(rawText);
+    if (provider === "openai") {
+      result = await fetchFromOpenAI(apiKey, promptText);
     } else {
-      console.error("API-Fehler HTTP-Status:", response.status);
+      result = await fetchFromGemini(apiKey, promptText);
     }
   } catch (e) {
     console.warn("API Error / Fallback genutzt:", e);
@@ -440,8 +491,9 @@ Antworte AUSSCHLIESSLICH als gültiges JSON ohne Markdown-Formatierung:
 
   stopTerminalAnimation();
 
+  // Fallback, falls der Key falsch ist oder die API fehlschlägt
   if (!result) {
-    alert("API-Abfrage fehlgeschlagen. Bitte prüfe deinen API-Key über den Button oben.");
+    alert("API-Abfrage fehlgeschlagen. Bitte prüfe deinen API-Key und Anbieter-Einstellungen.");
     result = {
       aktenzeichen: generatedKey,
       status: "UNGEPRÜFT",
